@@ -142,10 +142,161 @@ app.post("/auth/login", (req, res) => {
 
 // API ENDPOINTS- HOUR 3 WORKS
 
+//1️⃣ GET /property/:id/defects
 
-  
+
+app.get('/property/:id/defects', (req, res) => {
+  const propertyId = req.params.id;
+
+  const sql = `
+    SELECT f.finding_id, d.defect_type, d.severity, d.observation_zone, d.confidence, f.observation_text
+    FROM Inspection_Findings f
+    JOIN Defect_AI_Tags d ON f.finding_id = d.finding_id
+    JOIN Inspection_Event e ON f.inspection_id = e.inspection_id
+    WHERE e.property_id = ?
+  `;
+
+  snowflakeConn.execute({
+    sqlText: sql,
+    binds: [propertyId],
+    complete: (err, stmt, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(rows);
+    }
+  });
+});
 
 
+
+//2. GET /property/{id}/risk-score- Fetch risk score for each ppty
+
+
+app.get('/property/:id/risk-score', (req, res) => {
+  const propertyId = req.params.id;
+
+  const query = `
+    SELECT *
+    FROM TABLE(core.calculate_property_risk_scores())
+    WHERE property_id = ?
+  `;
+
+  snowflakeConn.execute({
+    sqlText: query,
+    binds: [propertyId],
+    complete: (err, stmt, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (rows.length === 0) return res.status(404).json({ message: 'No risk score found for this property' });
+      res.json(rows[0]);
+    }
+  });
+});
+
+
+
+//3.  GET /room/{id}/alerts- to be reworked if possible
+
+app.get("/room/:id/alerts", (req, res) => {
+  const roomId = req.params.id;
+
+  snowflakeConn.execute({
+    sqlText: `
+      SELECT 
+        alert_id,
+        alert_type,
+        alert_class,
+        risk_score,
+        alert_message,
+        created_at
+      FROM core.alerts
+      WHERE alert_level = 'ROOM'
+        AND entity_id = ?
+      ORDER BY created_at DESC
+    `,
+    binds: [roomId],
+    complete: (err, stmt, rows) => {
+      if (err) {
+        console.error("Error fetching room alerts:", err);
+        return res.status(500).json({ error: err.message });
+      }
+      res.json(rows);
+    }
+  });
+});
+
+
+
+//4.  POST /inspection/submit
+
+/*app.post("/inspection/submit", async (req, res) => {
+  const {
+    property_id,
+    inspection_date,
+    inspector_name,
+    findings
+  } = req.body;
+
+  if (!property_id || !inspection_date || !inspector_name || !findings?.length) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  try {
+    const inspectionId = crypto.randomUUID();
+
+    await snowflakeConn.execute({
+      sqlText: `
+        INSERT INTO core.inspection_event
+        (inspection_id, property_id, inspection_date, inspector_name)
+        VALUES (?, ?, ?, ?)
+      `,
+      binds: [inspectionId, property_id, inspection_date, inspector_name]
+    });
+
+    // 2️⃣ Insert findings + AI tags
+    for (const f of findings) {
+      const findingId = crypto.randomUUID();
+
+      await snowflakeConn.execute({
+        sqlText: `
+          INSERT INTO core.inspection_finding
+          (finding_id, inspection_id, room_id, observation, observation_text, image_reference)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `,
+        binds: [
+          findingId,
+          inspectionId,
+          f.room_id,
+          f.observation,
+          f.observation_text,
+          f.image_reference
+        ]
+      });
+
+      await snowflakeConn.execute({
+        sqlText: `
+          INSERT INTO core.defect_ai_tags
+          (finding_id, defect_type, severity, observation_zone, confidence)
+          VALUES (?, ?, ?, ?, ?)
+        `,
+        binds: [
+          findingId,
+          f.defect_type,
+          f.severity,
+          f.observation_zone || 'GENERAL',
+          f.confidence
+        ]
+      });
+    }
+
+    res.status(201).json({
+      message: "Inspection submitted successfully",
+      inspection_id: inspectionId
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});*/
 
 
 
