@@ -17,9 +17,11 @@
     "@langchain/core": "^1.1.17",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
+    "canvas": "^3.2.1",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "langchain": "^1.2.14",
+    "pdfkit": "^0.17.2",
     "snowflake-sdk": "^2.3.3"
   }
 }

@@ -1,38 +1,35 @@
-const snowflakeConn = require("../db/snowflake");
-
-const exec = (sql, binds = []) =>
-    new Promise((resolve, reject) => {
-        snowflakeConn.execute({
-            sqlText: sql,
-            binds,
-            complete: (err, stmt, rows) => {
-                if (err) reject(err);
-                else resolve(rows);
-            }
-        });
-    });
+const { exec } = require("../db/snowflake");
 
 exports.getReportData = async (propertyId) => {
-    const rootCauses = await exec(`
+  const rootCauses = await exec(`
     SELECT
+      rm.ROOM_ID,
       rm.ROOM_TYPE,
-      r.ROOT_CAUSE,
-      r.SUPPORTING_SIGNALS,
-      r.AVG_CONFIDENCE
-    FROM ROOM_ROOT_CAUSES r
-    JOIN ROOM rm ON r.ROOM_ID = rm.ROOM_ID
+      rc.ROOT_CAUSE            AS ISSUE,
+      COUNT(*)                 AS SUPPORTING_SIGNALS,
+      AVG(rc.CONFIDENCE)       AS AVG_CONFIDENCE
+    FROM HOUSE_INTEL_DB.CORE.ROOT_CAUSE_INFERENCE rc
+    JOIN HOUSE_INTEL_DB.CORE.ROOM rm
+      ON rc.ROOM_ID = rm.ROOM_ID
     WHERE rm.PROPERTY_ID = ?
+    GROUP BY
+      rm.ROOM_ID,
+      rm.ROOM_TYPE,
+      rc.ROOT_CAUSE
+    ORDER BY AVG_CONFIDENCE DESC
   `, [propertyId]);
 
-    const futureRisks = await exec(`
+  const futureRisks = await exec(`
     SELECT
+      rm.ROOM_ID,
       rm.ROOM_TYPE,
       fe.EVENT_NAME,
       fe.SEVERITY
-    FROM ROOM_FUTURE_EVENTS fe
-    JOIN ROOM rm ON fe.ROOM_ID = rm.ROOM_ID
+    FROM HOUSE_INTEL_DB.CORE.ROOM_FUTURE_EVENTS fe
+    JOIN HOUSE_INTEL_DB.CORE.ROOM rm
+      ON fe.ROOM_ID = rm.ROOM_ID
     WHERE rm.PROPERTY_ID = ?
   `, [propertyId]);
 
-    return { rootCauses, futureRisks };
+  return { rootCauses, futureRisks };
 };

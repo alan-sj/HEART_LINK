@@ -296,8 +296,11 @@ app.post("/inspection/submit", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+app.use("/report", require("./routes/report.routes"));
+app.use("/property", require("./routes/property.routes"));
 
-
+const visionRoutes = require("./routes/vision.routes");
+app.use("/vision", visionRoutes);
 
 
 
