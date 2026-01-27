@@ -12,9 +12,9 @@ const connection = snowflake.createConnection({
 
 connection.connect((err) => {
     if (err) {
-        console.error("❌ Snowflake connection failed:", err.message);
+        console.error("Snowflake connection failed:", err.message);
     } else {
-        console.log("✅ Connected to Snowflake");
+        console.log("Connected to Snowflake");
     }
 });
 

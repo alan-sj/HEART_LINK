@@ -25,6 +25,8 @@ app.get("/health", (req, res) => {
         }
     });
 });
+app.use("/report", require("./routes/report.routes"));
+
 
 
 app.listen(process.env.PORT, () => {

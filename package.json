@@ -13,8 +13,11 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@langchain/core": "^1.1.17",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "langchain": "^1.2.14",
     "snowflake-sdk": "^2.3.3"
   }
 }
