@@ -4,6 +4,11 @@ const {
     normalizeFutureRisks
 } = require("./normalize.util");
 
+const LANGUAGE_HINTS = {
+    en: "Use English language.",
+    ml: "Use Malayalam language (മലയാളം)."
+};
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const ROLE_INSTRUCTIONS = {
@@ -26,8 +31,7 @@ JSON format (MANDATORY):
   ],
   "recommendation": string
 }
-`
-    ,
+`,
     Builder: `
 You are generating a Builder technical report.
 
@@ -44,33 +48,47 @@ JSON format (MANDATORY):
     }
   ]
 }
-
 `,
     Inspector: `
 Use technical language.
 Explain root causes, severity, and compliance risks.
-Return JSON with:
-- analysis[]
+
+Return ONLY valid JSON:
+{
+  "analysis": [
+    {
+      "room": string,
+      "defect": string,
+      "root_cause": string,
+      "severity": string,
+      "compliance": string
+    }
+  ]
+}
 `
 };
 
-exports.generateReport = async ({ role, data }) => {
+exports.generateReport = async ({ role, data, lang = "en" }) => {
+    console.log("🟡 generateReport lang =", lang);
+
     if (!process.env.GEMINI_API_KEY) {
         throw new Error("GEMINI_API_KEY missing");
     }
 
-    // 🔹 Normalize DB output FIRST (outside prompt)
     const normalizedRootCauses = normalizeRootCauses(data.rootCauses);
     const normalizedFutureRisks = normalizeFutureRisks(data.futureRisks);
 
-    // 🔹 Model
     const model = genAI.getGenerativeModel({
         model: "gemini-3-flash-preview"
     });
 
-    // 🔹 Prompt (ONLY text here)
     const prompt = `
 You are a building risk intelligence system.
+
+LANGUAGE (CRITICAL):
+You MUST respond ONLY in the following language.
+${LANGUAGE_HINTS[lang] || LANGUAGE_HINTS.en}
+If you do not follow this, the response is INVALID.
 
 ROLE INSTRUCTIONS:
 ${ROLE_INSTRUCTIONS[role]}
@@ -85,12 +103,13 @@ RULES:
 - Output ONLY valid JSON
 - No markdown
 - No explanations
+- JSON keys MUST be in English
+- JSON values MUST follow the selected language
 `;
 
     const result = await model.generateContent(prompt);
     const text = result.response.text();
 
-    // 🔐 Gemini-safe JSON extraction
     const start = text.indexOf("{");
     const end = text.lastIndexOf("}");
 
