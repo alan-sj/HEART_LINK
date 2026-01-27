@@ -227,7 +227,7 @@ app.get("/room/:id/alerts", (req, res) => {
 
 //4.  POST /inspection/submit
 
-/*app.post("/inspection/submit", async (req, res) => {
+app.post("/inspection/submit", async (req, res) => {
   const {
     property_id,
     inspection_date,
@@ -258,16 +258,15 @@ app.get("/room/:id/alerts", (req, res) => {
       await snowflakeConn.execute({
         sqlText: `
           INSERT INTO core.inspection_finding
-          (finding_id, inspection_id, room_id, observation, observation_text, image_reference)
-          VALUES (?, ?, ?, ?, ?, ?)
+          (finding_id, inspection_id, room_id, observation_text, image_ref)
+          VALUES (?, ?, ?, ?, ?)
         `,
         binds: [
           findingId,
           inspectionId,
           f.room_id,
-          f.observation,
           f.observation_text,
-          f.image_reference
+          f.image_ref
         ]
       });
 
@@ -296,7 +295,25 @@ app.get("/room/:id/alerts", (req, res) => {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
-});*/
+});
+
+
+
+
+
+
+
+
+
+
+
+
+//5  GET /report/{property_id}/{user_type}
+
+
+
+
+
 
 
 
