@@ -1,12 +1,16 @@
 
 require("dotenv").config();
 const bcrypt = require("bcryptjs");
+const cors = require('cors');
+
 
 const express = require("express");
 const snowflakeConn = require("./db/snowflake");
 
 const app = express();
 app.use(express.json());
+app.use(cors());
+
 
 app.get("/", (req, res) => {
   res.send("Snowflake Node API is running 🚀");
@@ -94,10 +98,6 @@ app.post("/auth/register", async (req, res) => {
 
 
 //USER LOGIN
-
-
-
-
 app.post("/auth/login", (req, res) => {
   const { email, password } = req.body;
 
@@ -140,52 +140,10 @@ app.post("/auth/login", (req, res) => {
 
 
 
-/*app.get("/property/:id/defects", (req, res) => {
-  const propertyId = req.params.id;
+// API ENDPOINTS- HOUR 3 WORKS
 
-  snowflakeConn.execute({
-    sqlText: `
-      SELECT
-        p.property_id,
-        p.region,
-        p.building_type,
-        ie.inspection_id,
-        ie.inspection_date,
-        ie.inspector_name,
-        r.room_id,
-        r.room_type,
-        r.floor_number,
-        f.finding_id,
-        f.observation,
-        f.observation_text,
-        f.image_reference,
-        d.defect_type,
-        d.severity AS defect_severity,
-        d.observation_zone,
-        d.confidence
-      FROM Property p
-      JOIN inspection_event ie
-        ON p.property_id = ie.property_id
-      JOIN inspection_findings f
-        ON ie.inspection_id = f.inspection_id
-      JOIN defect_ai_tags d
-        ON f.finding_id = d.finding_id
-      LEFT JOIN Room r
-        ON f.room_id = r.room_id
-      WHERE p.property_id = ?
-    `,
-    binds: [propertyId],
-    complete: (err, stmt, rows) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ error: err.message });
-      }
 
-      console.log(`✔ Found ${rows.length} issues for property ${propertyId}`);
-      res.json(rows);
-    }
-  });
-});*/
+  
 
 
 
