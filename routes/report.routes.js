@@ -47,7 +47,6 @@ router.post("/generate-pdf", async (req, res) => {
                     .text(`Room: ${d.room}`)
                     .text(`Issue: ${d.root_cause}`)
                     .text(`Fix: ${d.fix}`)
-                    .text(`Cost: ${d.estimated_cost}`)
                     .moveDown();
             });
         }
