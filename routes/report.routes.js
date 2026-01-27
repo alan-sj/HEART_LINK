@@ -7,13 +7,13 @@ router.post("/generate-pdf", async (req, res) => {
     try {
         const { propertyId, role } = req.body;
 
-        // 1️⃣ Fetch intelligence
+        // Fetch intelligence
         const data = await getReportData(propertyId);
 
-        // 2️⃣ Generate AI report
+        //  Generate AI report
         const report = await generateReport({ role, data });
 
-        // 3️⃣ Create PDF
+        // Create PDF
         const doc = new PDFDocument({ margin: 40 });
         res.setHeader("Content-Type", "application/pdf");
         res.setHeader(

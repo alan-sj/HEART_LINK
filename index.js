@@ -27,7 +27,8 @@ app.get("/health", (req, res) => {
 });
 app.use("/report", require("./routes/report.routes"));
 
-
+const visionRoutes = require("./routes/vision.routes");
+app.use("/vision", visionRoutes);
 
 app.listen(process.env.PORT, () => {
     console.log(`🚀 Server running on port ${process.env.PORT}`);
