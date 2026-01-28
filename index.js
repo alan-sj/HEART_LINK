@@ -2,6 +2,7 @@
 require("dotenv").config();
 const bcrypt = require("bcryptjs");
 const cors = require('cors');
+const path = require('path');
 
 
 const express = require("express");
@@ -33,7 +34,11 @@ app.get("/health", (req, res) => {
     }
   });
 });
+
+// Report routes
+app.use('/reports', express.static(path.join(__dirname, 'reports')));
 app.use('/report', require('./routes/report.routes'));
+
 
 
 //USER REGISTRATION
@@ -144,6 +149,14 @@ app.post("/auth/login", (req, res) => {
 
 //1️⃣ GET /property/:id/defects
 
+
+const { analyzePropertyDefects } = require('./controllers/defect.controller');
+
+app.post('/property/:id/analyze', (req, res) => {
+  req.body = req.body || {};
+  req.body.property_id = req.params.id; // Inject param into body for controller compatibility
+  analyzePropertyDefects(req, res);
+});
 
 app.get('/property/:id/defects', (req, res) => {
   const propertyId = req.params.id;

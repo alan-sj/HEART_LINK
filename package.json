@@ -15,6 +15,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@langchain/core": "^1.1.17",
+    "@langchain/google-genai": "^2.1.13",
     "bcryptjs": "^3.0.3",
     "canvas": "^3.2.1",
     "cors": "^2.8.6",
@@ -23,6 +24,7 @@
     "langchain": "^1.2.14",
     "nodemon": "^3.1.11",
     "pdfkit": "^0.17.2",
-    "snowflake-sdk": "^2.3.3"
+    "snowflake-sdk": "^2.3.3",
+    "zod": "^4.3.6"
   }
 }
