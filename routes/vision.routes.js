@@ -7,9 +7,13 @@ const {
 
 router.post("/analyze-image", async (req, res) => {
     try {
-        const { inspectionId, roomId, imagePath } = req.body;
+        const { inspectionId, roomId, imagePath, image } = req.body;
 
-        const defects = await analyzeInspectionImage(imagePath);
+        // Use 'image' (base64) if provided, otherwise fallback to 'imagePath' (legacy)
+        const input = image || imagePath;
+        if (!input) return res.status(400).json({ error: "No image provided" });
+
+        const defects = await analyzeInspectionImage(input);
 
         for (const d of defects) {
             const findingId = await insertInspectionFinding({
@@ -29,7 +33,8 @@ router.post("/analyze-image", async (req, res) => {
 
         res.json({
             status: "ok",
-            defects_detected: defects.length
+            defects_detected: defects.length,
+            defects
         });
     } catch (err) {
         console.error(err);

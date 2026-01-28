@@ -3,6 +3,7 @@ const PDFDocument = require("pdfkit");
 const { getReportData } = require("../services/report.service");
 const { generateReport } = require("../services/llm.service");
 const { createCanvas, registerFont } = require("canvas");
+const snowflakeConn = require("../db/snowflake");
 
 registerFont(
     "fonts/NotoSansMalayalam-Regular.ttf",
@@ -47,6 +48,43 @@ function malayalamToImage(text, width = 480) {
 }
 
 
+// GET /property (List all properties - useful for inspectors or general directory)
+router.get("/", (req, res) => {
+    snowflakeConn.connection.execute({
+        sqlText: `SELECT * FROM Property`,
+        complete: (err, stmt, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json(rows);
+        }
+    });
+});
+
+// GET /property/owner/:id (Get properties for a specific owner)
+router.get("/owner/:id", (req, res) => {
+    const { id } = req.params;
+    snowflakeConn.connection.execute({
+        sqlText: `SELECT * FROM Property WHERE user_id = ?`,
+        binds: [id],
+        complete: (err, stmt, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json(rows);
+        }
+    });
+});
+
+// GET /property/:id (Get single property details)
+router.get("/:id", (req, res) => {
+    const { id } = req.params;
+    snowflakeConn.connection.execute({
+        sqlText: `SELECT * FROM Property WHERE property_id = ?`,
+        binds: [id],
+        complete: (err, stmt, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            if (rows.length === 0) return res.status(404).json({ error: "Property not found" });
+            res.json(rows[0]);
+        }
+    });
+});
 
 router.get("/:propertyId/report", async (req, res) => {
     try {

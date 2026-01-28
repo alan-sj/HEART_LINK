@@ -7,11 +7,17 @@ const model = genAI.getGenerativeModel({
     model: "gemini-3-flash-preview"
 });
 
-function imageToBase64(imagePath) {
-    return fs.readFileSync(imagePath, { encoding: "base64" });
+// Helper to determine if input is a path or base64
+function getImageData(input) {
+    // If it looks like a path (e.g., has extension or checks existing), read it.
+    // For simplicity, we'll assume if it's long, it's base64.
+    if (input.length > 500) {
+        return input.replace(/^data:image\/\w+;base64,/, ""); // Strip prefix if present
+    }
+    return fs.readFileSync(input, { encoding: "base64" });
 }
 
-exports.analyzeInspectionImage = async (imagePath) => {
+exports.analyzeInspectionImage = async (imageInput) => {
     const prompt = `
 You are a professional building inspection AI.
 
@@ -31,7 +37,7 @@ Rules:
 
     const imagePart = {
         inlineData: {
-            data: imageToBase64(imagePath),
+            data: getImageData(imageInput),
             mimeType: "image/jpeg"
         }
     };

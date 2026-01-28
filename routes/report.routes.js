@@ -5,13 +5,13 @@ const { generateReport } = require("../services/llm.service");
 
 router.post("/generate-pdf", async (req, res) => {
     try {
-        const { propertyId, role } = req.body;
+        const { propertyId, role, lang = "en" } = req.body;
 
         // Fetch intelligence
         const data = await getReportData(propertyId);
 
         //  Generate AI report
-        const report = await generateReport({ role, data });
+        const report = await generateReport({ role, data, lang });
 
         // Create PDF
         const doc = new PDFDocument({ margin: 40 });
