@@ -48,7 +48,6 @@ const predictionSchema = z.object({
             defectType: z.string().describe('Type of potential future defect'),
             likelihood: z.string().describe('Likelihood: high, medium, or low'),
             timeframe: z.string().describe('Expected timeframe for occurrence'),
-            preventiveMeasures: z.array(z.string()).describe('Recommended preventive actions'),
             relatedRootCause: z.string().describe('Which root cause this relates to'),
         })
     ),
@@ -595,7 +594,7 @@ For each root cause you identify:
 1. Explain WHY this is a root cause (not just a symptom)
 2. Rate your confidence level (high, medium, low)
 3. Identify which building systems are affected
-4. Provide clear reasoning based on the defect patterns
+4. Provide clear reasoning based on the defect patterns in not more than 20words
 
 Focus on systematic issues like:
 - Design flaws
@@ -661,8 +660,7 @@ For each prediction:
 1. Specify the type of defect that may occur
 2. Estimate the likelihood (high, medium, low)
 3. Provide a realistic timeframe (e.g., "3-6 months", "1-2 years")
-4. Recommend specific preventive measures
-5. Link it to the relevant root cause
+4. Link it to the relevant root cause
 
 Consider:
 - Progressive deterioration patterns
