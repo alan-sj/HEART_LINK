@@ -252,60 +252,63 @@ app.post("/inspection/submit", async (req, res) => {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
+  // Helper to promisify Snowflake execute
+  const executeQuery = (sqlText, binds) => {
+    return new Promise((resolve, reject) => {
+      snowflakeConn.connection.execute({
+        sqlText,
+        binds,
+        complete: (err, stmt, rows) => {
+          if (err) {
+            console.error("Snowflake SQL Error:", err.message);
+            console.error("SQL:", sqlText);
+            console.error("Binds:", binds);
+            reject(err);
+          } else {
+            resolve(rows);
+          }
+        }
+      });
+    });
+  };
+
   try {
     const inspectionId = crypto.randomUUID();
 
-    await snowflakeConn.execute({
-      sqlText: `
-        INSERT INTO core.inspection_event
-        (inspection_id, property_id, inspection_date, inspector_name)
-        VALUES (?, ?, ?, ?)
-      `,
-      binds: [inspectionId, property_id, inspection_date, inspector_name]
-    });
+    console.log("Inserting inspection_event:", inspectionId);
+    await executeQuery(`
+      INSERT INTO INSPECTION_EVENT
+      (inspection_id, property_id, inspection_date, inspector_name)
+      VALUES (?, ?, ?, ?)
+    `, [inspectionId, property_id, inspection_date, inspector_name]);
 
-    // 2️⃣ Insert findings + AI tags
+    // Insert findings
     for (const f of findings) {
       const findingId = crypto.randomUUID();
+      console.log("Inserting inspection_finding:", findingId);
 
-      await snowflakeConn.execute({
-        sqlText: `
-          INSERT INTO core.inspection_finding
-          (finding_id, inspection_id, room_id, observation_text, image_ref)
-          VALUES (?, ?, ?, ?, ?)
-        `,
-        binds: [
-          findingId,
-          inspectionId,
-          f.room_id,
-          f.observation_text,
-          f.image_ref
-        ]
-      });
+      await executeQuery(`
+        INSERT INTO INSPECTION_FINDINGS
+        (finding_id, inspection_id, room_id, observation_text, image_ref)
+        VALUES (?, ?, ?, ?, ?)
+      `, [findingId, inspectionId, f.room_id, f.observation_text, f.image_ref || null]);
 
-      await snowflakeConn.execute({
-        sqlText: `
-          INSERT INTO core.defect_ai_tags
-          (finding_id, defect_type, severity, observation_zone, confidence)
-          VALUES (?, ?, ?, ?, ?)
-        `,
-        binds: [
-          findingId,
-          f.defect_type,
-          f.severity,
-          f.observation_zone || 'GENERAL',
-          f.confidence
-        ]
-      });
+      console.log("Inserting defect_ai_tags for finding:", findingId);
+      await executeQuery(`
+        INSERT INTO DEFECT_AI_TAGS
+        (finding_id, defect_type, severity, observation_zone, confidence)
+        VALUES (?, ?, ?, ?, ?)
+      `, [findingId, f.defect_type, f.severity, f.observation_zone || 'GENERAL', f.confidence]);
     }
 
+    console.log("Inspection submitted successfully:", inspectionId);
     res.status(201).json({
       message: "Inspection submitted successfully",
       inspection_id: inspectionId
     });
 
   } catch (err) {
-    console.error(err);
+    console.error("Inspection submission error:", err);
     res.status(500).json({ error: err.message });
   }
 });
