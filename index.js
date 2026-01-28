@@ -18,7 +18,7 @@ app.get("/", (req, res) => {
 
 
 app.get("/health", (req, res) => {
-  snowflakeConn.execute({
+  snowflakeConn.connection.execute({
     sqlText: `
       SELECT
         CURRENT_USER(),
@@ -54,7 +54,7 @@ app.post("/auth/register", async (req, res) => {
   const passwordHash = await bcrypt.hash(password, 10);
   const userId = uuidv4();
 
-  snowflakeConn.execute({
+  snowflakeConn.connection.execute({
     sqlText: `
       INSERT INTO USERS (
         user_id, full_name, email, password_hash, role, license_id
@@ -105,7 +105,7 @@ app.post("/auth/login", (req, res) => {
     return res.status(400).json({ error: "Missing credentials" });
   }
 
-  snowflakeConn.execute({
+  snowflakeConn.connection.execute({
     sqlText: `
       SELECT user_id, full_name, password_hash, role
       FROM USERS
@@ -156,7 +156,7 @@ app.get('/property/:id/defects', (req, res) => {
     WHERE e.property_id = ?
   `;
 
-  snowflakeConn.execute({
+  snowflakeConn.connection.execute({
     sqlText: sql,
     binds: [propertyId],
     complete: (err, stmt, rows) => {
@@ -180,7 +180,7 @@ app.get('/property/:id/risk-score', (req, res) => {
     WHERE property_id = ?
   `;
 
-  snowflakeConn.execute({
+  snowflakeConn.connection.execute({
     sqlText: query,
     binds: [propertyId],
     complete: (err, stmt, rows) => {
@@ -198,7 +198,7 @@ app.get('/property/:id/risk-score', (req, res) => {
 app.get("/room/:id/alerts", (req, res) => {
   const roomId = req.params.id;
 
-  snowflakeConn.execute({
+  snowflakeConn.connection.execute({
     sqlText: `
       SELECT 
         alert_id,
